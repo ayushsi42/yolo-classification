@@ -19,7 +19,8 @@ sys.path.insert(0, str(project_root))
 from src.config import Config, SETTINGS
 from src.models import DentalCariesTrainer
 from src.data.augmentation import get_augmentation_config
-from src.utils import setup_logging, print_system_info, set_seed
+from src.data.preprocessing import preprocess_dataset
+from src.utils import setup_logging, print_system_info, set_seed, ensure_dir
 
 
 def parse_args():
@@ -53,6 +54,9 @@ def parse_args():
         choices=["default", "light", "heavy", "medical"],
         help="Augmentation preset"
     )
+    # Preprocessing
+    parser.add_argument("--clahe", action="store_true", help="Apply CLAHE preprocessing")
+    parser.add_argument("--clip", type=float, default=2.0, help="CLAHE clip limit")
     
     # Device
     parser.add_argument(
@@ -88,7 +92,32 @@ def main():
         patience=args.patience,
         lr0=args.lr,
         device=args.device,
+        use_clahe=args.clahe,
     )
+    
+    # Handle CLAHE Preprocessing
+    if config.use_clahe:
+        logger.info("CLAHE preprocessing enabled. Enhancing dataset...")
+        processed_data_dir = config.project_root / "data_clahe"
+        if not processed_data_dir.exists():
+            preprocess_dataset(config.data_dir, processed_data_dir, clip_limit=args.clip)
+        
+        # Update config to use preprocessed data
+        config.data_dir = processed_data_dir
+        config.train_dir = processed_data_dir / "train"
+        config.val_dir = processed_data_dir / "val"
+        
+        # Create a new data_clahe.yaml
+        clahe_yaml = config.project_root / "src" / "config" / "data_clahe.yaml"
+        with open(clahe_yaml, 'w') as f:
+            f.write(f"path: {processed_data_dir}\n")
+            f.write(f"train: train/images\n")
+            f.write(f"val: val/images\n")
+            f.write(f"names:\n  0: dental_caries\n")
+            f.write(f"nc: 1\n")
+        
+        config.data_yaml = clahe_yaml
+        logger.info(f"Dataset enhanced and saved to {processed_data_dir}")
     
     # Get augmentation config
     augmentation = get_augmentation_config(args.augment)

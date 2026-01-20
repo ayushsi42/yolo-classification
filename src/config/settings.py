@@ -30,14 +30,17 @@ class Config:
     data_yaml: Path = SRC_DIR / "config" / "data.yaml"
     
     # ==================== Model ====================
-    model_name: str = "yolo11s-seg"  # Options: yolo11n-seg, yolo11s-seg, yolo11m-seg, yolo11l-seg, yolo11x-seg
+    model_name: str = "yolo11m-seg"  # Upgraded from s to m for better performance
     pretrained: bool = True
     
     # ==================== Training Hyperparameters ====================
     epochs: int = 100
-    batch_size: int = 16
-    imgsz: int = 640
-    patience: int = 20  # Early stopping patience
+    batch_size: int = 8  # Reduced for 1024px images on Tesla T4/M1
+    imgsz: int = 1024    # Increased from 640 to 1024 for finer detail
+    patience: int = 25   # Slightly more patience for higher res
+    
+    # ==================== Preprocessing ====================
+    use_clahe: bool = True  # Enable Contrast Limited Adaptive Histogram Equalization
     
     # Learning rate
     lr0: float = 0.01  # Initial learning rate
