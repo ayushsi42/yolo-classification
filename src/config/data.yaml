@@ -1,14 +1,6 @@
-# Dental Caries Detection Dataset Configuration
-# YOLOv11 Segmentation Format
-
-# Dataset paths (absolute paths)
-path: /Users/ayushsingh/Desktop/Projects/ds_assignment/data
+path: data
 train: train/images
 val: val/images
-
-# Class names
 names:
   0: dental_caries
-
-# Number of classes
 nc: 1
